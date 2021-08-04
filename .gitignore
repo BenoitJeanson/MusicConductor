@@ -1,4 +1,5 @@
 # locally working
+.vscode/
 output/
 jupyTest.jpynb
 tabGen.code-workspace
