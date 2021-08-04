@@ -107,16 +107,16 @@ Bb7b9/D
 # Run
 ## Render
 The song is embedded in a string `song_str`
-To generate the cprresponding `html` file
+To generate the corresponding `html` file
 ```
 sf = SongFactory()
 song = sf.parse(song_str)
 with open(h_tml_file_name,"w") as f:
     f.write(song.with_yattag())
 ```
-Add `style.css` fond in `./source/`in the same repository as the generated file
+Add `style.css` found in `./source/`in the repository of the generated file
 ## Transpose
-Based on the previous example, one can change the key with `song.set_key()`. (The originate key of the song is the one declared in the first line of the content)
+Based on the previous example, one can change the key with `song.set_key()`. (The originate key of the song is the one declared in the first line of the document)
 ```
 sf = SongFactory()
 song = sf.parse(song_str)
