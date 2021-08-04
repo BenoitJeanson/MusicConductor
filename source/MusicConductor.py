@@ -151,19 +151,19 @@ class MusicItemFactory:
 
 
 class Bar:
-    def __init__(self, music_items, resolution) -> None:
+    def __init__(self, music_items, bar_resolution) -> None:
         self.music_items = music_items
-        self.resolution = resolution
+        self.bar_resolution = bar_resolution
 
     def __str__(self) -> str:
         return " ".join([str(mi) for mi in self.music_items])
 
-    def with_yattag(self, doc=None, tag=None, text=None):
+    def to_html(self, doc=None, tag=None, text=None):
         if doc == None:
             doc, tag, text = Doc().tagtext()
         i = 0
         if not self.music_items:
-            for j in range(self.resolution):
+            for j in range(self.bar_resolution):
                 with tag('td', klass=('FirstBarItem ' if j == 0 else '') + 'EmptyBar'):
                     continue
         else:
@@ -199,13 +199,13 @@ class LineBar:
             str([str(bar) for bar in self.bars]) +\
             ' x' + str(self.repeat)
 
-    def with_yattag(self, doc=None, tag=None, text=None):
+    def to_html(self, doc=None, tag=None, text=None):
         if doc == None:
             doc, tag, text = Doc().tagtext()
         with tag('td', klass='lineBarComment'):
             text(self.comment)
         for bar in self.bars:
-            bar.with_yattag(doc, tag, text)
+            bar.to_html(doc, tag, text)
         with tag('td', klass='lineBarRepeat'):
             if self.repeat != 1:
                 text('x' + str(self.repeat))
@@ -243,7 +243,7 @@ class Section:
         back = '\n'
         return f"{self.name} {back.join([str(lb) for lb in self.line_bars])} x{self.repeat}"
 
-    def with_yattag(self, doc=None, tag=None, text=None):
+    def to_html(self, doc=None, tag=None, text=None):
         if doc == None:
             doc, tag, text = Doc().tagtext()
 
@@ -254,14 +254,14 @@ class Section:
                      (' emptySectionName' if self.name == '' else '')):
                 text(self.name)
             if self.line_bars:
-                self.line_bars[0].with_yattag(doc, tag, text)
+                self.line_bars[0].to_html(doc, tag, text)
             if self.repeat != 1:
                 with tag('td', ('rowspan', str(max([1, nb_lines]))), klass='sectionRepeat'):
                     text("x" + str(self.repeat))
         if self.line_bars:
             for line in self.line_bars[1:]:
                 with tag('tr'):
-                    line.with_yattag(doc, tag, text)
+                    line.to_html(doc, tag, text)
 
         return indent(doc.getvalue())
 
@@ -301,7 +301,7 @@ class Song:
     def set_key(self, key):
         self.tone.set_tone(key)
 
-    def with_yattag(self, doc=None, tag=None, text=None):
+    def to_html(self, doc=None, tag=None, text=None):
         if doc == None:
             doc, tag, text = Doc().tagtext()
 
@@ -326,7 +326,7 @@ class Song:
                     text(" bpm")
                 with tag('table'):
                     for section in self.sections:
-                        section.with_yattag(doc, tag, text)
+                        section.to_html(doc, tag, text)
                         with tag('tr', klass='sectionsSeparation'):
                             continue
 
@@ -334,7 +334,7 @@ class Song:
 
 
 class SongFactory:
-    def parse(self, str):
+    def parse(self, str, section_factory=None, bar_resolution=4):
         sections = str.split('_')
         header = sections[0]
         fields = [st.strip() for st in header.split(',')]
@@ -342,9 +342,13 @@ class SongFactory:
         key = fields[1]
         time = fields[2]
         tempo = fields[3]
+        if len(fields) > 4:
+            bar_resolution = int(fields[4])
+            print(bar_resolution)
         tone = Tone(key)
-        section_factory = SectionFactory(
-            LineBarFactory(BarFactory(MusicItemFactory(tone))))
+        if section_factory == None:
+            section_factory = SectionFactory(
+                LineBarFactory(BarFactory(MusicItemFactory(tone, bar_resolution), bar_resolution)))
         return Song(title, tone, time, tempo, [section_factory.parse(sec) for sec in sections[1:]])
 
 
