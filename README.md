@@ -75,7 +75,7 @@ example:
 _"Instru",*2
 ```
 
-2. Barlines made of (in any order):
+2. ***Barlines*** made of (in any order):
   * ***Bars*** separated with `|` containing 
     * ***Music items*** (see below) separated with space
   * (optional, default = 1) `*` number of ***repetions*** for the line
@@ -93,6 +93,8 @@ A Music item is composed of:
 *  a music element that can be:
     * any string (not including separators such as `|`, `,`, `"` or ` `)
     * a ***chord*** following the pattern `Key`, `KeyChordtype` or `KeyChordtype\BassKey`
+
+Note that a key may be changed from one key map to another (e.g. `Db` to `C#`) to ensure overall consistency with the declared *original key* of the song.
 
 examples:
 ```
