@@ -12,12 +12,12 @@ class Tone:
     def set_tone(self, key):
         self.key = key
 
-        key_map_bemol = ["A", "Bb", "B", "C", "Db",
+        self.key_map_bemol = ["A", "Bb", "B", "C", "Db",
                          "D", "Eb", "E", "F", "Gb", "G", "Ab"]
-        tone_map_sharp = ["A", "A#", "B", "C", "C#",
+        self.key_map_sharp = ["A", "A#", "B", "C", "C#",
                           "D", "D#", "E", "F", "F#", "G", "G#"]
-        self.key_map = key_map_bemol if key in [
-            "Bb", "C", "Db", "Eb", "F", "Gb", "Ab"] else tone_map_sharp
+        self.key_map = self.key_map_bemol if key in [
+            "Bb", "C", "Db", "Eb", "F", "Gb", "Ab"] else self.key_map_sharp
 
         self.key_deg = self.key_map.index(key)
 
@@ -28,10 +28,11 @@ class Tone:
         return self.key_map[(deg + self.get_key_deg()) % 12]
 
     def note_to_deg(self, note) -> int:
-        return (self.key_map.index(note) - self.get_key_deg()) % 12
+        deg = self.key_map_bemol.index(note) if note in self.key_map_bemol else self.key_map_sharp.index(note)
+        return (deg - self.get_key_deg()) % 12
 
     def is_note(self, str):
-        return str in self.key_map
+        return str in self.key_map_bemol or str in self.key_map_sharp
 
 
 class Note():
