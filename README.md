@@ -51,7 +51,7 @@ _"Outro",
 # Language definition
 A song is structured as followed:
 ## First line
-Ordered information seperated with `,`
+Ordered information seperated with `;`
   1. ***title***
   2. ***original key*** (e.g. `F`, `Bb`, `F#`)
   3. ***time*** (e.g. `4/4`)
@@ -65,7 +65,7 @@ Ordered information seperated with `,`
 
 ## Section
 Starts with the character `_` followed by (separated with *line breaks*)
-1. separated with commas `,`
+1. separated with commas `;`
   * ***section title*** between `" "`
   * (optional, default = 1) `*` number of ***repetitions*** for the section
 
@@ -91,7 +91,7 @@ example:
 A Music item is composed of:
 * (optional, default value = *bar resolution* (see above)) ***duration*** expressed in one digit [1-9]. When no duration is expressed, this means the music item will cover the whole bar. If not, it's its spanning portion out of the *bar resolution* of the song. The sum of each duration of a bar shall be equal to *bar resolution*
 *  a music element that can be:
-    * any string (not including separators such as `|`, `,`, `"` or ` `)
+    * any string (not including separators such as `|`, `;`, `"` or ` `)
     * a ***chord*** following the pattern `Key`, `KeyChordtype` or `KeyChordtype\BassKey`
 
 Note that a key may be changed from one key map to another (e.g. `Db` to `C#`) to ensure overall consistency with the declared *original key* of the song.

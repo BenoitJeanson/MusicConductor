@@ -187,7 +187,7 @@ class BarFactory:
                    self.resolution)
 
 
-class LineBar:
+class BarLine:
     def __init__(self, bars, comment="", repeat=1) -> None:
         self.bars = bars
         self.comment = comment
@@ -211,15 +211,15 @@ class LineBar:
         return indent(doc.getvalue())
 
 
-class LineBarFactory:
+class BarLineFactory:
     def __init__(self, bar_factory) -> None:
         self.bar_factory = bar_factory
 
-    def parse(self, line_bar_str) -> LineBar:
+    def parse(self, bar_line_str) -> BarLine:
         comment = ""
         repeat = 1
         bars = []
-        for st in line_bar_str.split(','):
+        for st in bar_line_str.split(';'):
             st = st.strip()
             if st[0] == '"':
                 comment = st[1:-1]
@@ -229,36 +229,36 @@ class LineBarFactory:
                 bars = [self.bar_factory.parse(bar_st)
                         for bar_st in st.split('|')]
 
-        return LineBar(bars, comment, repeat)
+        return BarLine(bars, comment, repeat)
 
 
 class Section:
-    def __init__(self, name, repeat, line_bars) -> None:
+    def __init__(self, name, repeat, bar_lines) -> None:
         self.name = name
-        self.line_bars = line_bars
+        self.bar_lines = bar_lines
         self.repeat = repeat
 
     def __str__(self) -> str:
         back = '\n'
-        return f"{self.name} {back.join([str(lb) for lb in self.line_bars])} x{self.repeat}"
+        return f"{self.name} {back.join([str(lb) for lb in self.bar_lines])} x{self.repeat}"
 
     def to_html(self, doc=None, tag=None, text=None):
         if doc == None:
             doc, tag, text = Doc().tagtext()
 
-        nb_lines = len(self.line_bars)
+        nb_lines = len(self.bar_lines)
         # with tag('table'):
         with tag('tr'):
             with tag('td', ('rowspan', str(max([1, nb_lines]))), klass='sectionName' +
                      (' emptySectionName' if self.name == '' else '')):
                 text(self.name)
-            if self.line_bars:
-                self.line_bars[0].to_html(doc, tag, text)
+            if self.bar_lines:
+                self.bar_lines[0].to_html(doc, tag, text)
             if self.repeat != 1:
                 with tag('td', ('rowspan', str(max([1, nb_lines]))), klass='sectionRepeat'):
                     text("x" + str(self.repeat))
-        if self.line_bars:
-            for line in self.line_bars[1:]:
+        if self.bar_lines:
+            for line in self.bar_lines[1:]:
                 with tag('tr'):
                     line.to_html(doc, tag, text)
 
@@ -278,7 +278,7 @@ class SectionFactory:
                 section_content.append(striped)
         name = ""
         repeat = 1
-        for st in re.split(r",", section_content[0]):
+        for st in re.split(r";", section_content[0]):
             content = st.strip()
             if len(content) == 0:
                 continue
@@ -336,7 +336,7 @@ class SongFactory:
     def parse(self, str, section_factory=None, bar_resolution=4):
         sections = str.split('_')
         header = sections[0]
-        fields = [st.strip() for st in header.split(',')]
+        fields = [st.strip() for st in header.split(';')]
         title = fields[0]
         key = fields[1]
         time = fields[2]
@@ -347,7 +347,7 @@ class SongFactory:
         tone = Tone(key)
         if section_factory == None:
             section_factory = SectionFactory(
-                LineBarFactory(BarFactory(MusicItemFactory(tone, bar_resolution), bar_resolution)))
+                BarLineFactory(BarFactory(MusicItemFactory(tone, bar_resolution), bar_resolution)))
         return Song(title, tone, time, tempo, [section_factory.parse(sec) for sec in sections[1:]])
 
 
@@ -359,9 +359,9 @@ def default_bar_factory(tone):
     return BarFactory(default_music_item_factory(tone))
 
 
-def default_line_bar_factory(tone):
-    return LineBarFactory(default_bar_factory(tone))
+def default_bar_line_factory(tone):
+    return BarLineFactory(default_bar_factory(tone))
 
 
 def default_section_factory(tone):
-    return SectionFactory(default_line_bar_factory(tone))
+    return SectionFactory(default_bar_line_factory(tone))
