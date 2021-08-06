@@ -10,29 +10,21 @@ Which is the result of the following document:
 ```
 MusicConductor Example; F; 4/4; 150
 _"Intro";
-"Fade in F" ; 3Bb 1F|F|3Dm 1C|C 
+"Fade in F" ; 3Bb[A B C D] 1F[G Bb A#]|F|3Dm 1C|C 
 
-_"Verse 1"; 
+_"Verse 1";
 "STRINGS" ; Bb|C|F|% ; *3
-"+kick"; Bb|C|F|%
+"+kick"; Bb[A B C D]|C|F|%
 Bb|C|Dm|STOP
 
 _"Chorus"
 "ALL"; Bb|C|F|%;*2
-Bb|C|Dm|F/A
+Bb|C#|Dm|F/A
 Bb|2C 1-- 1--||
 
-_"Intro"
-"Strings Bass kick"; Bb|F|2Dm 1-- 1--|1-- 1-- 1-- 1--
-
-_"Verse 2"
-"Strings Bass kick"; Bb|C|F|%;*3
-Bb|C|Dm|F/A
-Bb|C||
-
 _"Instru";*2
-Bb|Bb|C|C
-Dm|Dm|C/E|C/E
+Bb[Eb F G]|Bb|C|C
+2Dm 2%[E D C]|Dm|Cm7/Eb|C/E
 
 _""
 "Drums 1/2 Strings"; Bb|Bb||
@@ -42,8 +34,8 @@ _""
 Dm|F|Bb|STOP
 
 _"Chorus"; *2
-"tranquille";*3
-"violent"
+"Quiet + building";*3
+"Loud"
 
 _"Outro";
 3Bb 1F|F|3Dm 1C|C;*4
@@ -91,8 +83,9 @@ example:
 A Music item is composed of:
 * (optional, default value = *bar resolution* (see above)) ***duration*** expressed in one digit [1-9]. When no duration is expressed, this means the music item will cover the whole bar. If not, it's its spanning portion out of the *bar resolution* of the song. The sum of each duration of a bar shall be equal to *bar resolution*
 *  a music element that can be:
-    * any string (not including separators such as `|`, `;`, `"` or ` `)
+    * any string (not including separators such as `|`, `;`, `"`, `[`, or ` `)
     * a ***chord*** following the pattern `Key`, `KeyChordtype` or `KeyChordtype\BassKey`
+    * optionnally followed by a ***Riff*** which is a list of notes between `[ ]` separated by ` `
 
 Note that a key may be changed from one key map to another (e.g. `Db` to `C#`) to ensure overall consistency with the declared *original key* of the song.
 
@@ -104,6 +97,7 @@ F#
 2F/G
 FM7/A
 Bb7b9/D
+3Bb[A Bb C D]
 ```
 
 # Run
