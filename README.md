@@ -8,45 +8,45 @@ Here is an example of the expected result:
 
 Which is the result of the following document:
 ```
-MusicConductor Example, F, 4/4, 150
-_"Intro",
-"Fade in F" , 3Bb 1F|F|3Dm 1C|C 
+MusicConductor Example; F; 4/4; 150
+_"Intro";
+"Fade in F" ; 3Bb 1F|F|3Dm 1C|C 
 
-_"Verse 1", 
-"STRINGS" , Bb|C|F|% , *3
-"+kick", Bb|C|F|%
+_"Verse 1"; 
+"STRINGS" ; Bb|C|F|% ; *3
+"+kick"; Bb|C|F|%
 Bb|C|Dm|STOP
 
 _"Chorus"
-"ALL", Bb|C|F|%,*2
+"ALL"; Bb|C|F|%;*2
 Bb|C|Dm|F/A
 Bb|2C 1-- 1--||
 
 _"Intro"
-"Strings Bass kick", Bb|F|2Dm 1-- 1--|1-- 1-- 1-- 1--
+"Strings Bass kick"; Bb|F|2Dm 1-- 1--|1-- 1-- 1-- 1--
 
 _"Verse 2"
-"Strings Bass kick", Bb|C|F|%,*3
+"Strings Bass kick"; Bb|C|F|%;*3
 Bb|C|Dm|F/A
 Bb|C||
 
-_"Instru",*2
+_"Instru";*2
 Bb|Bb|C|C
 Dm|Dm|C/E|C/E
 
 _""
-"Drums 1/2 Strings", Bb|Bb||
+"Drums 1/2 Strings"; Bb|Bb||
 
 _""
-"Strings + kick", Dm|F|Bb|Bb
+"Strings + kick"; Dm|F|Bb|Bb
 Dm|F|Bb|STOP
 
-_"Chorus", *2
-"tranquille",*3
+_"Chorus"; *2
+"tranquille";*3
 "violent"
 
-_"Outro",
-3Bb 1F|F|3Dm 1C|C,*4
+_"Outro";
+3Bb 1F|F|3Dm 1C|C;*4
 ```
 # Language definition
 A song is structured as followed:
@@ -60,7 +60,7 @@ Ordered information seperated with `;`
   
   example:
   ```
-  MusicConductor Example, F, 4/4, 150
+  MusicConductor Example; F; 4/4; 150
   ```
 
 ## Section
@@ -72,7 +72,7 @@ Starts with the character `_` followed by (separated with *line breaks*)
 example:
 
 ```
-_"Instru",*2
+_"Instru";*2
 ```
 
 2. ***Barlines*** made of (in any order):
@@ -84,7 +84,7 @@ _"Instru",*2
 example:
 
 ```
-"STRINGS" , Bb|3C7 1Gb7|F|% , *3
+"STRINGS" ; Bb|3C7 1Gb7|F|% ; *3
 ```
 
 ## Music item
