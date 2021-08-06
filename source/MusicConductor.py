@@ -4,6 +4,17 @@ import re
 
 from yattag.simpledoc import SimpleDoc
 
+HEADER_INFO = 'header__info'
+SECTION_SEPARATION = 'sections__separation'
+SECTION_NAME = 'section__name'
+SECTION_EMPTY_NAME = 'section__empty__name'
+SECTION_REPEAT = 'section__repeat'
+LINE_BAR_COMMENT = 'line__bar__comment'
+LINE_BAR_REPEAT = 'line__bar__repeat'
+BAR__EMPTY = 'bar--empty'
+BAR_ITEM = 'bar__item'
+BAR_ITEM_FIRST = 'bar__item--first'
+
 
 class Tone:
     def __init__(self, key: str) -> None:
@@ -135,7 +146,7 @@ class MusicItem:
         if doc == None:
             doc, tag, text = Doc().tagtext()
         for j in range(self.duration):
-            with tag('td', klass=('FirstBarItem ' if self.is_first_in_bar and j == 0 else '') + 'BarItem'):
+            with tag('td', klass=((BAR_ITEM_FIRST + ' ') if self.is_first_in_bar and j == 0 else '') + BAR_ITEM):
                 if j == 0:
                     text(str(self.music_element.get_content()))
 
@@ -212,7 +223,7 @@ class Bar:
             doc, tag, text = Doc().tagtext()
         if not self.music_items:
             for j in range(self.bar_resolution):
-                with tag('td', klass=('FirstBarItem ' if j == 0 else '') + 'EmptyBar'):
+                with tag('td', klass=((BAR_ITEM_FIRST + ' ') if j == 0 else '') + BAR__EMPTY):
                     continue
         else:
             for mi in self.music_items:
@@ -225,7 +236,7 @@ class Bar:
             doc, tag, text = Doc().tagtext()
         if not self.music_items:
             for j in range(self.bar_resolution):
-                with tag('td', klass=('FirstBarItem ' if j == 0 else '') + 'EmptyBar'):
+                with tag('td', klass=((BAR_ITEM_FIRST + ' ') if j == 0 else '') + BAR__EMPTY):
                     continue
         else:
             for mi in self.music_items:
@@ -264,11 +275,11 @@ class BarLine:
     def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
         if doc == None:
             doc, tag, text = Doc().tagtext()
-        with tag('td', klass='lineBarComment'):
+        with tag('td', klass=LINE_BAR_COMMENT):
             text(self.comment)
         for bar in self.bars:
             bar.to_html(doc, tag, text)
-        with tag('td', klass='lineBarRepeat'):
+        with tag('td', klass=LINE_BAR_REPEAT):
             if self.repeat != 1:
                 text('x' + str(self.repeat))
         return indent(doc.getvalue())
@@ -315,13 +326,13 @@ class Section:
         nb_lines = len(self.bar_lines)
         # with tag('table'):
         with tag('tr'):
-            with tag('td', ('rowspan', str(max([1, nb_lines]))), klass='sectionName' +
-                     (' emptySectionName' if self.name == '' else '')):
+            with tag('td', ('rowspan', str(max([1, nb_lines]))),
+                     klass=SECTION_NAME + ((' ' + SECTION_EMPTY_NAME) if self.name == '' else '')):
                 text(self.name)
             if self.bar_lines:
                 self.bar_lines[0].to_html(doc, tag, text)
             if self.repeat != 1:
-                with tag('td', ('rowspan', str(max([1, nb_lines]))), klass='sectionRepeat'):
+                with tag('td', ('rowspan', str(max([1, nb_lines]))), klass=SECTION_REPEAT):
                     text("x" + str(self.repeat))
         if self.bar_lines:
             for line in self.bar_lines[1:]:
@@ -384,7 +395,7 @@ class Song:
             with tag('body'):
                 with tag('h1'):
                     text(self.title)
-                with tag('p', klass="HeaderInfo"):
+                with tag('p', klass=HEADER_INFO):
                     text("Key:")
                     with tag('b'):
                         text(self.tone.get_tone())
@@ -398,7 +409,7 @@ class Song:
                 with tag('table'):
                     for section in self.sections:
                         section.to_html(doc, tag, text)
-                        with tag('tr', klass='sectionsSeparation'):
+                        with tag('tr', klass=SECTION_SEPARATION):
                             continue
 
         return indent(doc.getvalue())
@@ -427,17 +438,17 @@ class SongFactory:
         return Song(title, tone, time, tempo, [section_factory.parse(sec) for sec in sections[1:]])
 
 
-def default_music_item_factory(tone:Tone):
+def default_music_item_factory(tone: Tone):
     return MusicItemFactory(tone)
 
 
-def default_bar_factory(tone:Tone):
+def default_bar_factory(tone: Tone):
     return BarFactory(default_music_item_factory(tone))
 
 
-def default_bar_line_factory(tone:Tone):
+def default_bar_line_factory(tone: Tone):
     return BarLineFactory(default_bar_factory(tone))
 
 
-def default_section_factory(tone:Tone):
+def default_section_factory(tone: Tone):
     return SectionFactory(default_bar_line_factory(tone))
