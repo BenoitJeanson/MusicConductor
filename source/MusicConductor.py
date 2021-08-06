@@ -1,3 +1,4 @@
+
 from typing import Any
 from yattag import Doc, indent
 import re
@@ -11,9 +12,11 @@ SECTION_EMPTY_NAME = 'section__empty__name'
 SECTION_REPEAT = 'section__repeat'
 LINE_BAR_COMMENT = 'line__bar__comment'
 LINE_BAR_REPEAT = 'line__bar__repeat'
-BAR__EMPTY = 'bar--empty'
+RIFF = 'riff'
+RIFF_EMPTY = 'riff--empty'
+BAR_EMPTY = 'bar--empty'
 BAR_ITEM = 'bar__item'
-BAR_ITEM_FIRST = 'bar__item--first'
+BAR_OPEN = 'bar__open'
 
 
 class Tone:
@@ -110,13 +113,29 @@ class Chord(MusicElement):
 class Riff:
     def __init__(self,
                  notes: 'list[Note]',
-                 duration: int) -> None:
+                 duration: int,
+                 is_first_in_bar: bool) -> None:
 
         self.notes = notes
         self.duration = duration
+        self.is_first_in_bar = is_first_in_bar
+
+    def is_empty(self) -> bool:
+        return len(self.notes) == 0
 
     def __str__(self) -> str:
-        return '-'.join([str(n) for n in self.notes])
+        return ' '.join([str(n) for n in self.notes])
+
+    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
+
+        if doc == None:
+            doc, tag, text = Doc().tagtext()
+
+        kl = RIFF_EMPTY if not self.notes else ' '
+        kl += ' ' + RIFF
+        with tag('td', ('colspan', self.duration), klass=kl):
+            text(str(self))
+        return indent(doc.getvalue())
 
 
 class MusicItem:
@@ -131,24 +150,36 @@ class MusicItem:
         self.duration = duration
         self.resolution = 4
         self.is_first_in_bar = is_first_in_bar
-        self.riff = riff
+        self.riff = riff if riff != None else Riff(
+            [], duration, is_first_in_bar)
 
     def get_duration(self) -> int:
         return self.duration
 
-    def has_melody(self) -> bool:
-        return self.riff == None
+    def has_riff(self) -> bool:
+        return not self.riff.is_empty()
 
     def __str__(self) -> str:
         return str(self.music_element.get_content() + '->' + str(self.riff))
 
-    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None):
+    def to_html(self,
+                doc: SimpleDoc = None, tag: Any = None, text: Any = None,
+                riff_line: bool = False) -> str:
+
         if doc == None:
             doc, tag, text = Doc().tagtext()
-        for j in range(self.duration):
-            with tag('td', klass=((BAR_ITEM_FIRST + ' ') if self.is_first_in_bar and j == 0 else '') + BAR_ITEM):
-                if j == 0:
-                    text(str(self.music_element.get_content()))
+
+        if riff_line:
+            self.riff.to_html(doc, tag, text)
+        else:
+            for j in range(self.duration):
+                kl = (
+                    BAR_OPEN + ' ') if self.is_first_in_bar and j == 0 else ''
+                kl += BAR_EMPTY if self.music_element == None else BAR_ITEM
+                with tag('td', klass=kl):
+                    if j == 0 and self.music_element != None:
+                        text(str(self.music_element.get_content()))
+        return indent(doc.getvalue())
 
 
 class MusicItemFactory:
@@ -172,17 +203,19 @@ class MusicItemFactory:
         deg = self.tone.note_to_deg(key[0])
         return deg, str[len(key[0]):]
 
-    def parse_melody(self, str: str) -> Riff:
-        return(Riff(
+    def parse_melody(self, str: str, is_first_in_bar: bool) -> Riff:
+        return Riff(
+            [] if str == '' else
             [Note(self.tone, self.tone.note_to_deg(st))
              for st in str.split(' ')],
-            self.duration))
+            self.duration, is_first_in_bar)
 
     def parse(self, str: str, is_first_in_bar: bool) -> MusicItem:
         content = self.parse_duration(str)
 
         melody_str = re.findall('\[.*\]', content)
-        melody = self.parse_melody(melody_str[0][1:-1]) if melody_str else None
+        riff = self.parse_melody(
+            melody_str[0][1:-1] if melody_str else '', is_first_in_bar)
         element_str = content.split('[')[0]
 
         dash = element_str.find("/")
@@ -202,7 +235,7 @@ class MusicItemFactory:
                 music_element = StrMusicElement(element_str)
             else:
                 music_element = Chord(Note(self.tone, deg), chord_type)
-        return MusicItem(self.duration, music_element, self.resolution, is_first_in_bar, melody)
+        return MusicItem(self.duration, music_element, self.resolution, is_first_in_bar, riff)
 
 
 class Bar:
@@ -213,34 +246,21 @@ class Bar:
     def __str__(self) -> str:
         return " ".join([str(mi) for mi in self.music_items])
 
-    def has_melody(self) -> bool:
-        has = False
+    def has_riff(self) -> bool:
         for mi in self.music_items:
-            has = has or mi.has_melody()
+            if mi.has_riff():
+                return True
+        return False
 
-    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
+    def to_html(self,
+                doc: SimpleDoc = None, tag: Any = None, text: Any = None,
+                riff_line: bool = False) -> str:
+
         if doc == None:
             doc, tag, text = Doc().tagtext()
-        if not self.music_items:
-            for j in range(self.bar_resolution):
-                with tag('td', klass=((BAR_ITEM_FIRST + ' ') if j == 0 else '') + BAR__EMPTY):
-                    continue
-        else:
-            for mi in self.music_items:
-                mi.to_html(doc, tag, text)
-
+        for mi in self.music_items:
+            mi.to_html(doc, tag, text, riff_line)
         return indent(doc.getvalue())
-
-    def riff_to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
-        if doc == None:
-            doc, tag, text = Doc().tagtext()
-        if not self.music_items:
-            for j in range(self.bar_resolution):
-                with tag('td', klass=((BAR_ITEM_FIRST + ' ') if j == 0 else '') + BAR__EMPTY):
-                    continue
-        else:
-            for mi in self.music_items:
-                mi.to_html(doc, tag, text)
 
 
 class BarFactory:
@@ -253,8 +273,10 @@ class BarFactory:
 
     def parse(self, music_items_str: str) -> Bar:
         music_items = re.findall('\S*\[[^\[]*\]|\S+', music_items_str)
-        return Bar([] if not music_items else [
-            self.music_item_factory.parse(st, i == 0) for i, st in enumerate(music_items)], self.resolution)
+        return Bar(
+            [MusicItem(self.resolution, None, self.resolution, True)] if not music_items else [
+                self.music_item_factory.parse(st, i == 0) for i, st in enumerate(music_items)],
+            self.resolution)
 
 
 class BarLine:
@@ -272,16 +294,30 @@ class BarLine:
             str([str(bar) for bar in self.bars]) +\
             ' x' + str(self.repeat)
 
-    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
+    def has_riff(self) -> bool:
+        for bar in self.bars:
+            if bar.has_riff():
+                return True
+        return False
+
+    def to_html(self,
+                doc: SimpleDoc = None, tag: Any = None, text: Any = None,
+                riff_line=False) -> str:
+
         if doc == None:
             doc, tag, text = Doc().tagtext()
-        with tag('td', klass=LINE_BAR_COMMENT):
-            text(self.comment)
+
+        row_span = ('rowspan', '2') if self.has_riff() else ('rowspan', '1')
+        write_first_line_content = riff_line or not self.has_riff()
+        if write_first_line_content:
+            with tag('td', row_span, klass=LINE_BAR_COMMENT):
+                text(self.comment)
         for bar in self.bars:
-            bar.to_html(doc, tag, text)
-        with tag('td', klass=LINE_BAR_REPEAT):
-            if self.repeat != 1:
-                text('x' + str(self.repeat))
+            bar.to_html(doc, tag, text, riff_line)
+        if write_first_line_content:
+            with tag('td', row_span, klass=LINE_BAR_REPEAT):
+                if self.repeat != 1:
+                    text('x' + str(self.repeat))
         return indent(doc.getvalue())
 
 
@@ -319,25 +355,40 @@ class Section:
         back = '\n'
         return f"{self.name} {back.join([str(lb) for lb in self.bar_lines])} x{self.repeat}"
 
+    def count_riff_lines(self) -> int:
+        i = 0
+        for bl in self.bar_lines:
+            if bl.has_riff():
+                i += 1
+        return i
+
     def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
         if doc == None:
             doc, tag, text = Doc().tagtext()
 
-        nb_lines = len(self.bar_lines)
+        nb_lines = len(self.bar_lines) + self.count_riff_lines()
+        row_span = ('rowspan', str(max([1, nb_lines])))
         # with tag('table'):
         with tag('tr'):
-            with tag('td', ('rowspan', str(max([1, nb_lines]))),
+            with tag('td', row_span,
                      klass=SECTION_NAME + ((' ' + SECTION_EMPTY_NAME) if self.name == '' else '')):
                 text(self.name)
             if self.bar_lines:
-                self.bar_lines[0].to_html(doc, tag, text)
+                self.bar_lines[0].to_html(
+                    doc, tag, text, self.bar_lines[0].has_riff())
             if self.repeat != 1:
-                with tag('td', ('rowspan', str(max([1, nb_lines]))), klass=SECTION_REPEAT):
+                with tag('td', row_span, klass=SECTION_REPEAT):
                     text("x" + str(self.repeat))
         if self.bar_lines:
-            for line in self.bar_lines[1:]:
+            if self.bar_lines[0].has_riff():
                 with tag('tr'):
-                    line.to_html(doc, tag, text)
+                    self.bar_lines[0].to_html(doc, tag, text, False)
+            for line in self.bar_lines[1:]:
+                if line.has_riff():
+                    with tag('tr'):
+                        line.to_html(doc, tag, text, True)
+                with tag('tr'):
+                    line.to_html(doc, tag, text, False)
 
         return indent(doc.getvalue())
 
