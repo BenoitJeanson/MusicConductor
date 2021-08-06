@@ -15,8 +15,10 @@ th, tr, td {
 .header__info{
     text-align: center;
 }
-.section__name{
+.section__name .section__empty__name{
 	width:120px;
+}
+.section__name{
     text-align: right;
 	vertical-align: text-top;
 	border-right: 2px solid black;
@@ -24,31 +26,37 @@ th, tr, td {
     font-weight: bold;
 }
 .section__empty__name{
-	border-color: white;
+	border-style:hidden;
 }
 .line__bar__comment{
 	width:100px;
     font-size:12px;
     text-align:right;
 }
+.line__bar__repeat {
+	width:30px;
+}
 .bar__item, .bar--empty{
-    padding:5px;
+	width:50px;
 }
 .bar__item{
-	width:50px;
- 	border-top : 2px solid black;
- 	border-bottom : 2px solid black;
+    padding:5px;
     font-size:20px;
+	border-top: 2px solid;
+	border-bottom: 2px solid;
 }
-.bar__item--first, .line__bar__repeat, .section__repeat {
-	border-left:2px solid black;
+.bar__open, .section__repeat, .line__bar__repeat {
+	border-left:2px solid;
+}
+.riff{
+	padding: 5px;
+	padding-top: 10px;
+	font-size: 12px;
+	border-right: hidden;
 }
 .bar--empty {
 	width:48px;
-	border-right:2px solid white;
-}
-.line__bar__repeat {
-	width:30px;
+	border-right-style:hidden;
 }
 .sections__separation {
 	height: 25px;
