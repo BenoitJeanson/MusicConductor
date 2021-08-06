@@ -1,15 +1,18 @@
+from typing import Any
 from yattag import Doc, indent
 import re
 
+from yattag.simpledoc import SimpleDoc
+
 
 class Tone:
-    def __init__(self, key) -> None:
-        self.set_tone(key)
+    def __init__(self, key: str) -> None:
+        self.set_key(key)
 
     def get_tone(self) -> str:
         return self.key
 
-    def set_tone(self, key):
+    def set_key(self, key: str):
         self.key = key
 
         self.key_map_bemol = ["A", "Bb", "B", "C", "Db",
@@ -24,20 +27,20 @@ class Tone:
     def get_key_deg(self) -> int:
         return self.key_deg
 
-    def deg_to_note(self, deg) -> str:
+    def deg_to_note(self, deg: int) -> str:
         return self.key_map[(deg + self.get_key_deg()) % 12]
 
-    def note_to_deg(self, note) -> int:
+    def note_to_deg(self, note_str: str) -> int:
         deg = self.key_map_bemol.index(
-            note) if note in self.key_map_bemol else self.key_map_sharp.index(note)
+            note_str) if note_str in self.key_map_bemol else self.key_map_sharp.index(note_str)
         return (deg - self.get_key_deg()) % 12
 
-    def is_note(self, str):
+    def is_note(self, str) -> bool:
         return str in self.key_map_bemol or str in self.key_map_sharp
 
 
 class Note():
-    def __init__(self, tone, deg) -> None:
+    def __init__(self, tone: Tone, deg: int) -> None:
         super().__init__()
         self.tone = tone
         self.deg = deg
@@ -53,10 +56,7 @@ class Note():
 
 
 class MusicElement:
-    def __init__(self) -> None:
-        pass
-
-    def get_content(self):
+    def get_content(self) -> str:
         return str(self)
 
 
@@ -66,7 +66,8 @@ class EmptyMusicElement(MusicElement):
 
 
 class StrMusicElement(MusicElement):
-    def __init__(self, content) -> None:
+    def __init__(self, content: str) -> None:
+
         super().__init__()
         self.content = content
 
@@ -75,7 +76,11 @@ class StrMusicElement(MusicElement):
 
 
 class Chord(MusicElement):
-    def __init__(self, note, chord_type="", bass_note=None) -> None:
+    def __init__(self,
+                 note: Note,
+                 chord_type: str = "",
+                 bass_note: Note = None) -> None:
+
         super().__init__()
         self.note = note
         self.chord_type = chord_type
@@ -91,8 +96,11 @@ class Chord(MusicElement):
         return chord
 
 
-class Melody:
-    def __init__(self, notes, duration) -> None:
+class Riff:
+    def __init__(self,
+                 notes: 'list[Note]',
+                 duration: int) -> None:
+
         self.notes = notes
         self.duration = duration
 
@@ -101,20 +109,29 @@ class Melody:
 
 
 class MusicItem:
-    def __init__(self,  duration, music_element, resolution, is_first_in_bar, melody=None) -> None:
+    def __init__(self,
+                 duration: int,
+                 music_element: MusicElement,
+                 resolution: int,
+                 is_first_in_bar: bool,
+                 riff: Riff = None) -> None:
+
         self.music_element = music_element
         self.duration = duration
         self.resolution = 4
         self.is_first_in_bar = is_first_in_bar
-        self.melody = melody
+        self.riff = riff
 
     def get_duration(self) -> int:
         return self.duration
 
-    def __str__(self) -> str:
-        return str(self.music_element.get_content() + '->' + str(self.melody))
+    def has_melody(self) -> bool:
+        return self.riff == None
 
-    def to_html(self, doc=None, tag=None, text=None):
+    def __str__(self) -> str:
+        return str(self.music_element.get_content() + '->' + str(self.riff))
+
+    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None):
         if doc == None:
             doc, tag, text = Doc().tagtext()
         for j in range(self.duration):
@@ -124,13 +141,12 @@ class MusicItem:
 
 
 class MusicItemFactory:
-    def __init__(self, tone, resolution=4) -> None:
+    def __init__(self, tone: Tone, resolution: int = 4) -> None:
         self.tone = tone
         self.duration = resolution
-        self.content = ""
         self.resolution = resolution
 
-    def parse_duration(self, str) -> str:
+    def parse_duration(self, str: str) -> str:
         dur = str[:1]
         self.duration = self.resolution
         if (dur in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]):
@@ -138,18 +154,20 @@ class MusicItemFactory:
             return str[1:]
         return str
 
-    def identify_note(self, str):
+    def identify_note(self, str: str) -> 'tuple[int, str]':
         key = re.findall('[A-G][#b]|[A-G]', str)
         if not key or not self.tone.is_note(key[0]):
             return None, str
         deg = self.tone.note_to_deg(key[0])
         return deg, str[len(key[0]):]
 
-    def parse_melody(self, str):
-        return(Melody(
-            [Note(self.tone, self.tone.note_to_deg(st)) for st in str.split(' ')], self.duration))
+    def parse_melody(self, str: str) -> Riff:
+        return(Riff(
+            [Note(self.tone, self.tone.note_to_deg(st))
+             for st in str.split(' ')],
+            self.duration))
 
-    def parse(self, str, is_first_in_bar) -> MusicItem:
+    def parse(self, str: str, is_first_in_bar: bool) -> MusicItem:
         content = self.parse_duration(str)
 
         melody_str = re.findall('\[.*\]', content)
@@ -157,30 +175,39 @@ class MusicItemFactory:
         element_str = content.split('[')[0]
 
         dash = element_str.find("/")
+        music_element = None
         if dash != -1:
             n1, n2 = element_str.split("/")
             deg, chord_type = self.identify_note(n1)
             deg_bass, unused = self.identify_note(n2)
             if deg == None or deg_bass == None:
-                return MusicItem(self.duration, StrMusicElement(element_str), self.resolution, is_first_in_bar,melody)
+                music_element = StrMusicElement(element_str)
             else:
-                return MusicItem(self.duration, Chord(Note(self.tone, deg), chord_type, Note(self.tone, deg_bass)), self.resolution, is_first_in_bar)
-        deg, chord_type = self.identify_note(element_str)
-        if deg == None:
-            return MusicItem(self.duration, StrMusicElement(element_str), self.resolution, is_first_in_bar,melody)
+                music_element = Chord(
+                    Note(self.tone, deg), chord_type, Note(self.tone, deg_bass))
         else:
-            return MusicItem(self.duration, Chord(Note(self.tone, deg), chord_type), self.resolution, is_first_in_bar,melody)
+            deg, chord_type = self.identify_note(element_str)
+            if deg == None:
+                music_element = StrMusicElement(element_str)
+            else:
+                music_element = Chord(Note(self.tone, deg), chord_type)
+        return MusicItem(self.duration, music_element, self.resolution, is_first_in_bar, melody)
 
 
 class Bar:
-    def __init__(self, music_items, bar_resolution) -> None:
+    def __init__(self, music_items: 'list[MusicItem]', bar_resolution: int) -> None:
         self.music_items = music_items
         self.bar_resolution = bar_resolution
 
     def __str__(self) -> str:
         return " ".join([str(mi) for mi in self.music_items])
 
-    def to_html(self, doc=None, tag=None, text=None):
+    def has_melody(self) -> bool:
+        has = False
+        for mi in self.music_items:
+            has = has or mi.has_melody()
+
+    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
         if doc == None:
             doc, tag, text = Doc().tagtext()
         if not self.music_items:
@@ -193,20 +220,38 @@ class Bar:
 
         return indent(doc.getvalue())
 
+    def riff_to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
+        if doc == None:
+            doc, tag, text = Doc().tagtext()
+        if not self.music_items:
+            for j in range(self.bar_resolution):
+                with tag('td', klass=('FirstBarItem ' if j == 0 else '') + 'EmptyBar'):
+                    continue
+        else:
+            for mi in self.music_items:
+                mi.to_html(doc, tag, text)
+
 
 class BarFactory:
-    def __init__(self, music_item_factory, resolution=4) -> None:
+    def __init__(self,
+                 music_item_factory: MusicItemFactory,
+                 resolution: int = 4) -> None:
+
         self.music_item_factory = music_item_factory
         self.resolution = resolution
 
-    def parse(self, music_items_str) -> Bar:
+    def parse(self, music_items_str: str) -> Bar:
         music_items = re.findall('\S*\[[^\[]*\]|\S+', music_items_str)
         return Bar([] if not music_items else [
             self.music_item_factory.parse(st, i == 0) for i, st in enumerate(music_items)], self.resolution)
 
 
 class BarLine:
-    def __init__(self, bars, comment="", repeat=1) -> None:
+    def __init__(self,
+                 bars: 'list[Bar]',
+                 comment: str = "",
+                 repeat: int = 1) -> None:
+
         self.bars = bars
         self.comment = comment
         self.repeat = repeat
@@ -216,7 +261,7 @@ class BarLine:
             str([str(bar) for bar in self.bars]) +\
             ' x' + str(self.repeat)
 
-    def to_html(self, doc=None, tag=None, text=None):
+    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
         if doc == None:
             doc, tag, text = Doc().tagtext()
         with tag('td', klass='lineBarComment'):
@@ -230,10 +275,10 @@ class BarLine:
 
 
 class BarLineFactory:
-    def __init__(self, bar_factory) -> None:
+    def __init__(self, bar_factory: BarFactory) -> None:
         self.bar_factory = bar_factory
 
-    def parse(self, bar_line_str) -> BarLine:
+    def parse(self, bar_line_str: str) -> BarLine:
         comment = ""
         repeat = 1
         bars = []
@@ -251,7 +296,10 @@ class BarLineFactory:
 
 
 class Section:
-    def __init__(self, name, repeat, bar_lines) -> None:
+    def __init__(self,
+                 name: str,
+                 repeat: int,
+                 bar_lines: 'list[BarLine]') -> None:
         self.name = name
         self.bar_lines = bar_lines
         self.repeat = repeat
@@ -260,7 +308,7 @@ class Section:
         back = '\n'
         return f"{self.name} {back.join([str(lb) for lb in self.bar_lines])} x{self.repeat}"
 
-    def to_html(self, doc=None, tag=None, text=None):
+    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
         if doc == None:
             doc, tag, text = Doc().tagtext()
 
@@ -284,10 +332,10 @@ class Section:
 
 
 class SectionFactory:
-    def __init__(self, line_bar_factory) -> None:
-        self.line_bar_factory = line_bar_factory
+    def __init__(self, bar_line_factory: BarLineFactory) -> None:
+        self.bar_line_factory = bar_line_factory
 
-    def parse(self, section_str) -> Section:
+    def parse(self, section_str: str) -> Section:
         raw_section_content = re.split(r"\n", section_str)
         section_content = []
         for sc in raw_section_content:
@@ -304,21 +352,27 @@ class SectionFactory:
                 name = content.strip('"')
             elif content[0] == ("*"):
                 repeat = int(content[1:])
-        return Section(name, repeat, [self.line_bar_factory.parse(st) for st in section_content[1:]])
+        return Section(name, repeat, [self.bar_line_factory.parse(st) for st in section_content[1:]])
 
 
 class Song:
-    def __init__(self, title, tone, time, tempo, sections) -> None:
+    def __init__(self,
+                 title: str,
+                 tone: Tone,
+                 time: str,
+                 tempo: int,
+                 sections: 'list[Section]') -> None:
+
         self.title = title
         self.time = time
         self.tempo = tempo
         self.tone = tone
         self.sections = sections
 
-    def set_key(self, key):
-        self.tone.set_tone(key)
+    def set_key(self, key: str):
+        self.tone.set_key(key)
 
-    def to_html(self, doc=None, tag=None, text=None):
+    def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
         if doc == None:
             doc, tag, text = Doc().tagtext()
 
@@ -351,7 +405,11 @@ class Song:
 
 
 class SongFactory:
-    def parse(self, str, section_factory=None, bar_resolution=4):
+    def parse(self,
+              str: str,
+              section_factory: SectionFactory = None,
+              bar_resolution: int = 4):
+
         sections = str.split('_')
         header = sections[0]
         fields = [st.strip() for st in header.split(';')]
@@ -369,17 +427,17 @@ class SongFactory:
         return Song(title, tone, time, tempo, [section_factory.parse(sec) for sec in sections[1:]])
 
 
-def default_music_item_factory(tone):
+def default_music_item_factory(tone:Tone):
     return MusicItemFactory(tone)
 
 
-def default_bar_factory(tone):
+def default_bar_factory(tone:Tone):
     return BarFactory(default_music_item_factory(tone))
 
 
-def default_bar_line_factory(tone):
+def default_bar_line_factory(tone:Tone):
     return BarLineFactory(default_bar_factory(tone))
 
 
-def default_section_factory(tone):
+def default_section_factory(tone:Tone):
     return SectionFactory(default_bar_line_factory(tone))
