@@ -148,7 +148,7 @@ class MusicItem:
 
         self.music_element = music_element
         self.duration = duration
-        self.resolution = 4
+        self.resolution = resolution
         self.is_first_in_bar = is_first_in_bar
         self.riff = riff if riff != None else Riff(
             [], duration, is_first_in_bar)
@@ -302,7 +302,7 @@ class BarLine:
 
     def to_html(self,
                 doc: SimpleDoc = None, tag: Any = None, text: Any = None,
-                riff_line=False) -> str:
+                riff_line = False) -> str:
 
         if doc == None:
             doc, tag, text = Doc().tagtext()
@@ -310,12 +310,12 @@ class BarLine:
         row_span = ('rowspan', '2') if self.has_riff() else ('rowspan', '1')
         write_first_line_content = riff_line or not self.has_riff()
         if write_first_line_content:
-            with tag('td', row_span, klass=LINE_BAR_COMMENT):
+            with tag('td', row_span, klass = LINE_BAR_COMMENT):
                 text(self.comment)
         for bar in self.bars:
             bar.to_html(doc, tag, text, riff_line)
         if write_first_line_content:
-            with tag('td', row_span, klass=LINE_BAR_REPEAT):
+            with tag('td', row_span, klass = LINE_BAR_REPEAT):
                 if self.repeat != 1:
                     text('x' + str(self.repeat))
         return indent(doc.getvalue())
@@ -355,19 +355,17 @@ class Section:
         back = '\n'
         return f"{self.name} {back.join([str(lb) for lb in self.bar_lines])} x{self.repeat}"
 
-    def count_riff_lines(self) -> int:
+    def count_lines(self) -> int:
         i = 0
         for bl in self.bar_lines:
-            if bl.has_riff():
-                i += 1
+            i += 2 if bl.has_riff() else 1
         return i
 
     def to_html(self, doc: SimpleDoc = None, tag: Any = None, text: Any = None) -> str:
         if doc == None:
             doc, tag, text = Doc().tagtext()
 
-        nb_lines = len(self.bar_lines) + self.count_riff_lines()
-        row_span = ('rowspan', str(max([1, nb_lines])))
+        row_span = ('rowspan', str(max([1, self.count_lines()])))
         # with tag('table'):
         with tag('tr'):
             with tag('td', row_span,
