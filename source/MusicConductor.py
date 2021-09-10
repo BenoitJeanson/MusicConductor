@@ -181,7 +181,7 @@ class MusicItem:
         if riff_line:
             self.riff.to_html(doc, tag, text)
         else:
-            self.mi_core_to_html()
+            self.mi_core_to_html(tag, text)
         return indent(doc.getvalue())
 
 
