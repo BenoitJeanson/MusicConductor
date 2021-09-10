@@ -108,7 +108,7 @@ To generate the corresponding `html` file
 sf = SongFactory()
 song = sf.parse(song_str)
 with open(h_tml_file_name,"w") as f:
-    f.write(song.with_yattag())
+    f.write(song.to_html())
 ```
 Add `style.css` found in `./source/`in the repository of the generated file
 ## Transpose
@@ -118,5 +118,5 @@ sf = SongFactory()
 song = sf.parse(song_str)
 song.set_key('F#')
 with open(h_tml_file_name,"w") as f:
-    f.write(song.with_yattag())
+    f.write(song.to_html())
 ```
