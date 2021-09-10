@@ -162,6 +162,15 @@ class MusicItem:
     def __str__(self) -> str:
         return str(self.music_element.get_content() + '->' + str(self.riff))
 
+    def mi_core_to_html(self, tag: Any = None, text: Any = None) -> None:
+        for j in range(self.duration):
+            kl = (
+                BAR_OPEN + ' ') if self.is_first_in_bar and j == 0 else ''
+            kl += BAR_EMPTY if self.music_element == None else BAR_ITEM
+            with tag('td', klass=kl):
+                if j == 0 and self.music_element != None:
+                    text(str(self.music_element.get_content()))
+
     def to_html(self,
                 doc: SimpleDoc = None, tag: Any = None, text: Any = None,
                 riff_line: bool = False) -> str:
@@ -172,13 +181,7 @@ class MusicItem:
         if riff_line:
             self.riff.to_html(doc, tag, text)
         else:
-            for j in range(self.duration):
-                kl = (
-                    BAR_OPEN + ' ') if self.is_first_in_bar and j == 0 else ''
-                kl += BAR_EMPTY if self.music_element == None else BAR_ITEM
-                with tag('td', klass=kl):
-                    if j == 0 and self.music_element != None:
-                        text(str(self.music_element.get_content()))
+            self.mi_core_to_html()
         return indent(doc.getvalue())
 
 
@@ -302,7 +305,7 @@ class BarLine:
 
     def to_html(self,
                 doc: SimpleDoc = None, tag: Any = None, text: Any = None,
-                riff_line = False) -> str:
+                riff_line=False) -> str:
 
         if doc == None:
             doc, tag, text = Doc().tagtext()
@@ -310,12 +313,12 @@ class BarLine:
         row_span = ('rowspan', '2') if self.has_riff() else ('rowspan', '1')
         write_first_line_content = riff_line or not self.has_riff()
         if write_first_line_content:
-            with tag('td', row_span, klass = LINE_BAR_COMMENT):
+            with tag('td', row_span, klass=LINE_BAR_COMMENT):
                 text(self.comment)
         for bar in self.bars:
             bar.to_html(doc, tag, text, riff_line)
         if write_first_line_content:
-            with tag('td', row_span, klass = LINE_BAR_REPEAT):
+            with tag('td', row_span, klass=LINE_BAR_REPEAT):
                 if self.repeat != 1:
                     text('x' + str(self.repeat))
         return indent(doc.getvalue())
@@ -366,7 +369,6 @@ class Section:
             doc, tag, text = Doc().tagtext()
 
         row_span = ('rowspan', str(max([1, self.count_lines()])))
-        # with tag('table'):
         with tag('tr'):
             with tag('td', row_span,
                      klass=SECTION_NAME + ((' ' + SECTION_EMPTY_NAME) if self.name == '' else '')):
