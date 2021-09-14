@@ -68,7 +68,7 @@ song = sf.parse(song_str)
 with open(h_tml_file_name,"w") as f:
     f.write(song.to_html())
 ```
-Add `style.css` found in `./source/`in the repository of the generated file
+Add `style.css` found in `./resources/`in the repository of the generated file
 ## Transpose
 Based on the previous example, one can change the key with `song.set_key()`. (The originate key of the song is the one declared in the first line of the document)
 ```
