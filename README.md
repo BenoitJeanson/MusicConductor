@@ -4,7 +4,7 @@
 It also enables an easy way to transpose.
 ## Expected behavior
 Here is an example of the expected result:
-![example](docs/MusicConductor_Example.JPG)
+![example](./docs/MusicConductor_Example.JPG)
 
 Which is the result of the following document:
 ```
@@ -40,4 +40,4 @@ _"Chorus"; *2
 _"Outro";
 3Bb 1F|F|3Dm 1C|C;*4
 ```
-@@include[languagedefinition.md](docs/languagedefinition.md)
+@@include[languagedefinition.md](./docs/languagedefinition.md)
