@@ -40,4 +40,4 @@ _"Chorus"; *2
 _"Outro";
 3Bb 1F|F|3Dm 1C|C;*4
 ```
-@@include[languagedefinition.md](./docs/languagedefinition.md)
+[languagedefinition.md](./docs/languagedefinition.md)
