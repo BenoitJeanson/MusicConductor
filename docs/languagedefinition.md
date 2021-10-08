@@ -59,21 +59,26 @@ Bb7b9/D
 ```
 
 # Run
+## All in one
+```
+from musicconductor import generate
+generate(input_file)
+```
+Will generate the html file in the same repository as `input_file`.
 ## Render
 The song is embedded in a string `song_str`
 To generate the corresponding `html` file
 ```
-sf = SongFactory()
-song = sf.parse(song_str)
+from musicconductor import SongFactory
+song = SongFactory().parse(st)
 with open(h_tml_file_name,"w") as f:
     f.write(song.to_html())
 ```
-Add `style.css` found in `./resources/`in the repository of the generated file
 ## Transpose
 Based on the previous example, one can change the key with `song.set_key()`. (The originate key of the song is the one declared in the first line of the document)
 ```
-sf = SongFactory()
-song = sf.parse(song_str)
+from musicconductor import SongFactory
+song = SongFactory().parse(st)
 song.set_key('F#')
 with open(h_tml_file_name,"w") as f:
     f.write(song.to_html())
