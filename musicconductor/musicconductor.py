@@ -1,7 +1,9 @@
-
 from typing import Any
 from yattag import Doc, indent
 import re
+from ntpath import basename, dirname
+from importlib import resources
+from shutil import copyfile
 
 from yattag.simpledoc import SimpleDoc
 
@@ -442,6 +444,10 @@ class Song:
         with tag('html'):
             with tag('head'):
                 doc.stag('link', ('rel', "stylesheet"), ('href', 'style.css'))
+                
+                with tag('style'):
+                    with resources.open_text('resources','style.css') as css:
+                        text(css.read())
 
             with tag('body'):
                 with tag('h1'):
@@ -503,3 +509,16 @@ def default_bar_line_factory(tone: Tone):
 
 def default_section_factory(tone: Tone):
     return SectionFactory(default_bar_line_factory(tone))
+
+
+def generate(input_file_name, transpose=0):
+    base_name = basename(input_file_name).split('.')[0]
+    dir_path = dirname(input_file_name) + "/"
+    with open(input_file_name) as f:
+        song_str = f.read()
+    song = SongFactory().parse(song_str)
+    with open(dir_path + base_name + ".html", "w") as f:
+        f.write(song.to_html())
+"""     with resources.path("resources", "style.css") as path:
+        copyfile(path, dir_path + "style.css")
+ """
