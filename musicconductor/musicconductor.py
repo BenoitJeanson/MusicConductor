@@ -3,7 +3,6 @@ from yattag import Doc, indent
 import re
 from ntpath import basename, dirname
 from importlib import resources
-from shutil import copyfile
 
 from yattag.simpledoc import SimpleDoc
 
@@ -446,7 +445,7 @@ class Song:
                 doc.stag('link', ('rel', "stylesheet"), ('href', 'style.css'))
                 
                 with tag('style'):
-                    with resources.open_text('resources','style.css') as css:
+                    with resources.open_text('musicconductor.mc_resources','style.css') as css:
                         text(css.read())
 
             with tag('body'):
@@ -519,6 +518,3 @@ def generate(input_file_name, transpose=0):
     song = SongFactory().parse(song_str)
     with open(dir_path + base_name + ".html", "w") as f:
         f.write(song.to_html())
-"""     with resources.path("resources", "style.css") as path:
-        copyfile(path, dir_path + "style.css")
- """
