@@ -445,7 +445,7 @@ class Song:
                 doc.stag('link', ('rel', "stylesheet"), ('href', 'style.css'))
                 
                 with tag('style'):
-                    with resources.open_text('musicconductor.mc_resources','style.css') as css:
+                    with resources.open_text('musicconductor.resources','style.css') as css:
                         text(css.read())
 
             with tag('body'):
