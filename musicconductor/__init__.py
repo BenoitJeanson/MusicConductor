@@ -1,1 +1,1 @@
-from .musicconductor import SongFactory, generate
+from .musicconductor import SongFactory, generate, Song
